@@ -36,6 +36,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
 interface TextProps extends FieldProps {
   label: string;
   placeholder: string;
+  errorMessage?: string;
 }
 
 export const TextField: React.FC<TextProps> = ({

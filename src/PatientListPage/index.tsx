@@ -1,4 +1,5 @@
 import React from "react";
+import { Redirect, Link } from 'react-router-dom';
 import axios from "axios";
 import { Container, Table, Button } from "semantic-ui-react";
 
@@ -7,10 +8,10 @@ import AddPatientModal from "../AddPatientModal";
 import { Patient } from "../types";
 import { apiBaseUrl } from "../constants";
 import HealthRatingBar from "../components/HealthRatingBar";
-import { useStateValue } from "../state";
+import { useStateValue, AddPatient, FetchPatient } from "../state";
 
 const PatientListPage: React.FC = () => {
-  const [{ patients }, dispatch] = useStateValue();
+  const [{ patients, fetchedPatients }, dispatch] = useStateValue();
 
   const [modalOpen, setModalOpen] = React.useState<boolean>(false);
   const [error, setError] = React.useState<string | undefined>();
@@ -28,11 +29,26 @@ const PatientListPage: React.FC = () => {
         `${apiBaseUrl}/patients`,
         values
       );
-      dispatch({ type: "ADD_PATIENT", payload: newPatient });
+      dispatch(AddPatient(newPatient));
       closeModal();
     } catch (e) {
       console.error(e.response.data);
       setError(e.response.data.error);
+    }
+  };
+
+  const clickPatient = async (id: string) => {
+    try {
+      if(Object.values(fetchedPatients).filter(a => a.id === id).length === 0){
+        const patient = await axios.get<Patient>(
+          `${apiBaseUrl}/patients/${id}`
+        );
+        dispatch(FetchPatient(patient.data));
+      }
+      
+    } catch (e) {
+      console.error(e);
+      setError(e.response)
     }
   };
 
@@ -53,7 +69,7 @@ const PatientListPage: React.FC = () => {
         <Table.Body>
           {Object.values(patients).map((patient: Patient) => (
             <Table.Row key={patient.id}>
-              <Table.Cell>{patient.name}</Table.Cell>
+              <Table.Cell><Link to={'/patients/'+patient.id}><Button onClick={() => clickPatient(patient.id)}>{patient.name}</Button></Link></Table.Cell>
               <Table.Cell>{patient.gender}</Table.Cell>
               <Table.Cell>{patient.occupation}</Table.Cell>
               <Table.Cell>
